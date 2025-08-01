@@ -1,37 +1,59 @@
-// Import necessary hooks and components from react-router-dom and other libraries.
-import { Link, useParams } from "react-router-dom";  // To use link for navigation and useParams to get URL parameters
-import PropTypes from "prop-types";  // To define prop types for this component
-import rigoImageUrl from "../assets/img/rigo-baby.jpg"  // Import an image asset
-import useGlobalReducer from "../hooks/useGlobalReducer";  // Import a custom hook for accessing the global state
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
-// Define and export the Single component which displays individual item details.
-export const Single = props => {
-  // Access the global state using the custom hook.
-  const { store } = useGlobalReducer()
+const placeholder = "https://raw.githubusercontent.com/tbone849/star-wars-guide/refs/heads/master/build/assets/img/placeholder.jpg";
 
-  // Retrieve the 'theId' URL parameter using useParams hook.
-  const { theId } = useParams()
-  const singleTodo = store.todos.find(todo => todo.id === parseInt(theId));
+const Single = () => {
+  const { type, theId } = useParams();
+  const [item, setItem] = useState(null);
+
+  useEffect(() => {
+    fetch(`https://www.swapi.tech/api/${type}/${theId}`)
+      .then((res) => res.json())
+      .then((data) => setItem(data.result))
+      .catch(console.error);
+  }, [type, theId]);
+
+  if (!item) {
+    return <div className="text-center mt-5">Loading...</div>;
+  }
+
+  const imageUrl =
+    type === "people"
+      ? `https://raw.githubusercontent.com/tbone849/star-wars-guide/refs/heads/master/build/assets/img/characters/${theId}.jpg`
+      : `https://raw.githubusercontent.com/tbone849/star-wars-guide/refs/heads/master/build/assets/img/planets/${theId}.jpg`;
+
+  const handleImageError = (e) => {
+    e.target.src = placeholder;
+  };
 
   return (
-    <div className="container text-center">
-      {/* Display the title of the todo element dynamically retrieved from the store using theId. */}
-      <h1 className="display-4">Todo: {singleTodo?.title}</h1>
-      <hr className="my-4" />  {/* A horizontal rule for visual separation. */}
+    <div className="container mt-5">
+      <div style={{ display: "flex", alignItems: "flex-start" }}>
+        {/* Imagen */}
+        <img
+          src={imageUrl}
+          onError={handleImageError}
+          alt={item.properties?.name}
+          style={{ width: "800px", height: "600px", objectFit: "cover" }}
+        />
 
-      {/* A Link component acts as an anchor tag but is used for client-side routing to prevent page reloads. */}
-      <Link to="/">
-        <span className="btn btn-primary btn-lg" href="#" role="button">
-          Back home
-        </span>
-      </Link>
+        {/* Texto al lado */}
+        <div style={{ marginLeft: "40px", maxWidth: "600px" }}>
+          <h1 style={{ marginTop: 0 }}>{item.properties?.name}</h1>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
+            tincidunt convallis risus, sit amet tincidunt est mollis a. Nullam
+            auctor, turpis a pulvinar tincidunt, libero sapien consequat elit,
+            nec ultricies purus justo in erat. Integer fringilla metus in velit
+            ultrices, et fermentum orci pharetra. Aenean ut tristique tellus.
+            Fusce bibendum efficitur sapien. Nunc lacinia eros non lorem
+            tincidunt lacinia. Sed eget magna magna. Nam non velit quam.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
 
-// Use PropTypes to validate the props passed to this component, ensuring reliable behavior.
-Single.propTypes = {
-  // Although 'match' prop is defined here, it is not used in the component.
-  // Consider removing or using it as needed.
-  match: PropTypes.object
-};
+export default Single;
